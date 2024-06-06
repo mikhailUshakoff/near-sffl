@@ -19,6 +19,46 @@ jobs:
           sudo apt-get update
           sudo apt-get install docker-compose -y
 
+      - name: Build indexer container
+        uses: docker/build-push-action@v5
+        with:
+          load: true
+          context: .
+          file: ./indexer/Dockerfile
+          tags: near-sffl-indexer
+          cache-from: type=gha,scope=indexer
+          cache-to: type=gha,mode=max,scope=indexer
+
+      - name: Build relayer container
+        uses: docker/build-push-action@v5
+        with:
+          load: true
+          context: .
+          file: ./relayer/cmd/Dockerfile
+          tags: near-sffl-test-relayer
+          cache-from: type=gha,scope=relayer
+          cache-to: type=gha,mode=max,scope=relayer
+
+      - name: Build aggregator container
+        uses: docker/build-push-action@v5
+        with:
+          load: true
+          context: .
+          file: ./aggregator/cmd/Dockerfile
+          tags: near-sffl-aggregator
+          cache-from: type=gha,scope=aggregator
+          cache-to: type=gha,mode=max,scope=aggregator
+
+      - name: Build operator container
+        uses: docker/build-push-action@v5
+        with:
+          load: true
+          context: .
+          file: ./operator/cmd/Dockerfile
+          tags: near-sffl-operator
+          cache-from: type=gha,scope=operator
+          cache-to: type=gha,mode=max,scope=operator
+
       - name: Build and start Docker Compose services
         run: docker-compose -f ./docker-compose.yml up --build -d
 
