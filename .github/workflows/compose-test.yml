@@ -62,18 +62,63 @@ jobs:
       - name: Build and start Docker Compose services
         run: docker-compose -f ./docker-compose.yml up --build -d
 
-      - name: Wait for services to stabilize
-        run: sleep 300  # Wait for 5 minutes (300 seconds)
+      - name: Wait for 5 minutes
+        run: sleep 300 
 
-      - name: Check service status
+      - name: Ensure containers are running
         run: |
-          services=$(docker-compose -f ./docker-compose.yml ps -q)
+          containers=(
+            "near-sffl-operator1-health-1"
+            "near-sffl-operator1"
+            "near-sffl-operator0-health-1"
+            "near-sffl-operator0"
+            "rollup1-relayer"
+            "rollup0-relayer"
+            "near-sffl-indexer"
+            "near-sffl-aggregator"
+            "mainnet-anvil"
+            "prometheus"
+            "rollup0-anvil"
+            "rmq"
+            "rollup1-anvil"
+            "grafana"
+          ) # List of container names
+          for container in "${containers[@]}"; do
+            if docker inspect -f '{{.State.Running}}' "$container" >/dev/null 2>&1; then
+              echo "$container is running"
+            else
+              echo "$container is not running"
+              exit 1
+            fi
+          done
+
+
+      - name: Check health status
+        run: |
+          services=(
+            "near-sffl-operator1-health-1"
+            "near-sffl-operator1"
+            "near-sffl-operator0-health-1"
+            "near-sffl-operator0"
+            "rollup1-relayer"
+            "rollup0-relayer"
+            "near-sffl-indexer"
+            "near-sffl-aggregator"
+            "mainnet-anvil"
+            "prometheus"
+            "rollup0-anvil"
+            "rmq"
+            "rollup1-anvil"
+            "grafana"
+          ) # List of services names
           for service in $services; do
             status=$(docker inspect -f '{{.State.Health.Status}}' $service)
             if [ "$status" != "healthy" ]; then
               echo "Service $service is not healthy"
               docker-compose -f ./docker-compose.yml logs $service
               exit 1
+            else
+              echo "$container is healthy"
             fi
           done
 
