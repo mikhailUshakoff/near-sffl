@@ -1,0 +1,44 @@
+name: Build All Containers
+
+on:
+ workflow_dispatch:
+
+jobs:  
+  Test:
+    name: Build All Containers
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build indexer container
+        uses: docker/build-push-action@v5
+        with:
+          load: true
+          context: .
+          file: ./indexer/Dockerfile
+          tags: near-sffl-indexer
+          cache-from: type=gha,scope=indexer
+          cache-to: type=gha,mode=max,scope=indexer
+
+      - name: Build relayer container
+        uses: docker/build-push-action@v5
+        with:
+          load: true
+          context: .
+          file: ./relayer/cmd/Dockerfile
+          tags: near-sffl-test-relayer
+          cache-from: type=gha,scope=relayer
+          cache-to: type=gha,mode=max,scope=relayer
+
+      - name: Build plugin container
+        uses: docker/build-push-action@v5
+        with:
+          load: true
+          context: .
+          file: ./plugin/cmd/Dockerfile
+          tags: near-sffl-operator-plugin
+          cache-from: type=gha,scope=plugin
+          cache-to: type=gha,mode=max,scope=plugin
