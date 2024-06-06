@@ -115,7 +115,7 @@ jobs:
               docker-compose -f ./docker-compose.yml logs $service
               exit 1
             else
-              echo "$container is healthy"
+              echo "Service $service is healthy"
             fi
           done
 
