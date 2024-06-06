@@ -1,0 +1,41 @@
+name: Docker Compose Workflow 
+
+on:
+ workflow_dispatch:
+
+jobs:
+  run-docker-compose:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set up Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install docker-compose -y
+
+      - name: Build and start Docker Compose services
+        run: docker-compose -f ./docker-compose.yml up --build -d
+
+      - name: Wait for services to stabilize
+        run: sleep 300  # Wait for 5 minutes (300 seconds)
+
+      - name: Check service status
+        run: |
+          services=$(docker-compose -f ./docker-compose.yml ps -q)
+          for service in $services; do
+            status=$(docker inspect -f '{{.State.Health.Status}}' $service)
+            if [ "$status" != "healthy" ]; then
+              echo "Service $service is not healthy"
+              docker-compose -f ./docker-compose.yml logs $service
+              exit 1
+            fi
+          done
+
+      - name: Tear down Docker Compose services
+        run: docker-compose -f ./docker-compose.yml down
