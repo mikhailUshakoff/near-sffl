@@ -108,7 +108,7 @@ jobs:
             "mainnet-anvil"
             "rmq"
           ) # List of services names
-          for service in $services; do
+          for service in "${services[@]}"; do
             status=$(docker inspect -f '{{.State.Health.Status}}' $service)
             if [ "$status" != "healthy" ]; then
               echo "Service $service is not healthy"
